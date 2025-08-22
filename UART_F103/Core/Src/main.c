@@ -57,6 +57,8 @@ static void MX_USART2_UART_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+char msg[] = "PING PONG";   // sadece gönderimde
+uint8_t rxFlag = 0;
 /* USER CODE END 0 */
 
 /**
@@ -90,7 +92,8 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  char msg[9];
+
+  HAL_UART_Receive_IT(&huart2, (uint8_t*)msg, 10);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -99,15 +102,7 @@ int main(void)
   {
     /* USER CODE END WHILE */
 
-    /* USER CODE BEG_IN 3 */
-	HAL_UART_Receive(&huart2, (uint8_t*)msg, 9, 250);
-
-	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET); // LED ON
-
-	HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), 250);
-
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET); // LED OFF
-
+    /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }
@@ -213,6 +208,14 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+	if (huart->Instance == USART2) { // Aldığını geri gönder
+		HAL_UART_Transmit(&huart2, (uint8_t*)msg, 10, HAL_MAX_DELAY);
+		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13); // LED toggle
+		// Tekrar dinlemeyi aç
+		HAL_UART_Receive_IT(&huart2, (uint8_t*)msg, 10);
+	}
+}
 
 /* USER CODE END 4 */
 
